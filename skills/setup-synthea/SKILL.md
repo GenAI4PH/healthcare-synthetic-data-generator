@@ -1,28 +1,24 @@
 ---
 name: setup-synthea
-description: Install a pinned official Synthea version on Windows, macOS, or Linux after approval.
+description: Approved installation and smoke-test verification of official Synthea on Windows, macOS and Linux.
 ---
+# Synthea setup and validation
 
-# Install the official Synthea engine
+1. Read root `AGENTS.md` and `config/generator.yaml`. Never modify Synthea source or commit the `external/` directory.
+2. Confirm Python 3.11+, Git, and **JDK 17+**. Use `hsg doctor` and inspect `java -version` and `javac -version` (JDK, not JRE).
+3. Run `hsg setup-synthea` and describe the official source, version `v4.0.0` and destination. Ask approval before running `hsg setup-synthea --approve`.
+4. Run `hsg verify-synthea` to preview. Explain that Gradle will fetch build dependencies and compile official Synthea and create local synthetic patients. Request separate explicit approval before `hsg verify-synthea --approve`.
+5. Verify that `output/smoke-test/csv/patients.csv` and `output/smoke-test/smoke-test-report.json` exist, contain patient rows and a pinned upstream commit SHA. Report actual counts, never claim untested success.
+6. If output/smoke-test is nonempty, do not delete it silently. Ask user to archive/remove it, then retry.
+7. Never upload data or publish GitHub feedback without separate explicit approval. Offer optional authentic feedback after successful setup only.
 
-1. Open `AGENTS.md` and `config/generator.yaml`. Check `synthea.version` is a known, reviewed upstream release tag or a full 40-character commit SHA. If unset, ask the user to select one; don't invent a version.
-2. Run `hsg doctor`. If Git or Java 17+ is missing, explain OS-specific install options. Obtain explicit approval before installing system packages. The CLI does **not** install system packages.
-3. Run `hsg setup-synthea` to show source, pinned revision and target without downloading anything.
-4. Explain network access, disk usage and possible overwrite/checkout effects. Once approved, run `hsg setup-synthea --approve`.
-5. Confirm the returned commit SHA and `external/synthea-install.json` (ignored by git). The installation is a detached, pinned checkout under `external/`, never committed.
-6. Do not claim patient generation works until a separate upstream smoke test has actually succeeded. Never upload or publish anything without separate authorization.
-7. Optionally offer an authentic, editable GitHub Discussion feedback draft; never publish automatically or condition setup on feedback.
+## Windows PowerShell / macOS / Linux
 
-## Windows VS Code / PowerShell
-
-```powershell
+```sh
 python -m pip install -e ".[dev]"
 hsg doctor
-# Edit synthea.version in config/generator.yaml to a verified tag or full SHA
 hsg setup-synthea
 hsg setup-synthea --approve
+hsg verify-synthea
+hsg verify-synthea --approve
 ```
-
-## macOS / Linux
-
-Use the same CLI after installing Python 3.11+, Git, and Java 17+. The script invokes Git and Java using their platform-native PATH locations and uses no Bash-specific commands.

@@ -1,7 +1,7 @@
 synthea:
   install_dir: ./external/synthea
   source_repo: https://github.com/synthetichealth/synthea.git
-  version: null  # choose & pin a verified release/tag/commit in Phase 2
+  version: v4.0.0  # official pinned stable release; resolved to SHA when installed
 run:
   patients: 10
   state: Massachusetts

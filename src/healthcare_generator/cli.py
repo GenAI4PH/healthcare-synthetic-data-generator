@@ -47,5 +47,24 @@ def setup_synthea(
         typer.echo(f"ERROR: {exc}", err=True)
         raise typer.Exit(code=1) from exc
 
+@app.command("verify-synthea")
+def verify_synthea(
+    config: Path = typer.Option(Path("config/generator.yaml"), "--config"),
+    approve: bool = typer.Option(False, "--approve", help="Approve Gradle downloads, build and local synthetic patient generation"),
+) -> None:
+    """Build the pinned Synthea checkout and generate a 10-patient CSV smoke test."""
+    from .verify import verify
+    try:
+        if not approve:
+            typer.echo("Preview: build upstream Synthea with Gradle and generate 10 patients into output/smoke-test.")
+            typer.echo("Gradle may download dependencies. This does not upload data.")
+            typer.echo("Re-run with --approve to execute.")
+            return
+        report = verify(config, approved=True)
+        typer.echo(f"PASS: {report['exported_patient_rows']} patient rows at {report['csv_file']}")
+    except SetupError as exc:
+        typer.echo(f"ERROR: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
 if __name__ == "__main__":
     app()
