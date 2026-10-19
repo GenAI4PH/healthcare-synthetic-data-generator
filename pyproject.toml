@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "healthcare-synthetic-data-generator"
+version = "0.1.0"
+description = "Cross-platform orchestration for the official Synthea generator"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+authors = [{name = "Healthcare Synthetic Data Generator Contributors"}]
+dependencies = ["typer>=0.12,<1", "PyYAML>=6,<7"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10"]
+
+[project.scripts]
+hsg = "healthcare_generator.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]

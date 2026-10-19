@@ -1,0 +1,13 @@
+storage:
+  provider: local  # local | s3 | azure_blob | gdrive
+  local:
+    path: ./output
+  s3:
+    bucket: null
+    prefix: synthea/
+  azure_blob:
+    container: null
+    prefix: synthea/
+  gdrive:
+    folder_id: null
+# Authentication uses platform credential chains / OAuth; never paste secrets here.

@@ -1,0 +1,6 @@
+Healthcare Synthetic Data Generator
+Copyright 2026 Project Contributors
+
+The repository contains original orchestration software. It does not contain
+Synthea source or binaries. Synthea is a separate project developed by its
+respective contributors. This notice does not assert ownership of Synthea.
