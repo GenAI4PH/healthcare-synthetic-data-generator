@@ -46,3 +46,17 @@ hsg upload --destination s3
 
 ## License and attribution
 This orchestration code is licensed Apache-2.0 (see `LICENSE`). Synthea is an independent upstream project licensed under Apache-2.0; see `THIRD_PARTY_NOTICES.md`. If Synthea is fetched during setup, its own license and notices remain with that installation.
+
+## Phase 2: official Synthea installation (starter)
+
+The setup CLI downloads **only from the official Synthea Git repository** and checks out an immutable commit selected through `config/generator.yaml`. Synthea is stored in `external/synthea`, which is excluded from this project's Git history.
+
+```powershell
+python -m pip install -e ".[dev]"
+hsg doctor
+# Set synthea.version to a reviewed existing Synthea release tag or full 40-character SHA.
+hsg setup-synthea              # preview (no network changes)
+hsg setup-synthea --approve    # download / checkout, requires user approval
+```
+
+Prerequisites: Python 3.11+, Git, and Java 17+. This command does not install prerequisites, compile Synthea, generate patients, or upload files. Those are separate approved steps in future work. In VS Code, create `feature/phase2-synthea-setup` locally before copying or committing these changes.

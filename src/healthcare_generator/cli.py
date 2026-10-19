@@ -1,9 +1,10 @@
-"""Phase-1 diagnostics only. Install/generate/upload added in future phases."""
+"""Cross-platform CLI; upstream Synthea remains an external dependency."""
 import platform
 import shutil
 from pathlib import Path
 import typer
 import yaml
+from .setup import SetupError, install, load_settings, check_prerequisites
 
 app = typer.Typer(help="Healthcare Synthetic Data Generator orchestration CLI")
 
@@ -25,6 +26,26 @@ def config_show(path: Path = typer.Option(Path("config/generator.yaml"), "--path
         raise typer.Exit(code=1)
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     typer.echo(yaml.safe_dump(data, sort_keys=False))
+
+@app.command("setup-synthea")
+def setup_synthea(
+    config: Path = typer.Option(Path("config/generator.yaml"), "--config"),
+    approve: bool = typer.Option(False, "--approve", help="Approve download/update of official upstream repository"),
+) -> None:
+    """Install pinned upstream Synthea outside of the tracked repository files."""
+    try:
+        target, revision = load_settings(config)
+        typer.echo(f"Official source: https://github.com/synthetichealth/synthea.git")
+        typer.echo(f"Revision: {revision}\nDestination: {target}")
+        if not approve:
+            typer.echo("Dry run only. Re-run with --approve after reviewing network and disk changes.")
+            return
+        manifest = install(config, approved=True)
+        typer.echo(f"Installed Synthea at commit: {manifest['commit']}")
+        typer.echo("Next: build/run upstream Synthea smoke test (Phase 2 follow-up).")
+    except SetupError as exc:
+        typer.echo(f"ERROR: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
 
 if __name__ == "__main__":
     app()
