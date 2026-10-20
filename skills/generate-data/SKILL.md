@@ -1,12 +1,15 @@
 ---
 name: generate-data
-description: Run approved CSV, FHIR R4, or C-CDA generation using pinned upstream Synthea.
+description: Generate CSV/FHIR/C-CDA with pinned official Synthea; support checkpointed batches, 50 US states, recovery and CSV consolidation.
 ---
-# Generate healthcare synthetic data
+# Generate synthetic data
 
-1. Read `AGENTS.md`, `config/generator.yaml`, and confirm a verified official Synthea checkout.
-2. Ask user for format, requested living population, state, and optional random seed. Defaults are CSV, 10, Massachusetts. Supported counts include 10, 1000, 100000, 1000000, and custom (1..1000000).
-3. Preview `hsg generate csv --patients 10 --state Massachusetts` (or selected format) and explain local disk/CPU usage. For 100K+ request, warn that Phase 3 single-run mode does not provide batching/resume. Recommend small validation first.
-4. Run only after explicit approval: `hsg generate csv --patients 10 --state Massachusetts --approve`.
-5. Verify actual output and manifest. Synthea's `-p` targets living population, so total patients may exceed requested count.
-6. Do not upload or publish files automatically. Never commit generated patient files.
+1. Read root `AGENTS.md`, `docs/PHASE-3X.md` and `config/generator.yaml` before execution.
+2. Run `hsg doctor` and check a pinned official Synthea checkout exists. Never modify its source.
+3. For small single runs, use `hsg generate csv|fhir|ccda ...` (Phase 3.1). For multiple states, resume, or larger runs, use `hsg generate-batch`.
+4. Ask the user to clarify when `--patients` is ambiguous between an all-state total and per-state allocation. `--allocation total` and `per-state` both count *living* population targets, not exact total exports.
+5. Always show a dry run with no `--approve`; explain batch count, expected write locations, output growth and possible Gradle downloads. Obtain explicit permission before adding `--approve`.
+6. On failure, retain manifest and partial output; use `hsg resume-batch <run_dir> --approve` after reviewing what failed. Never silently delete or rewrite completed batches.
+7. Only merge completed CSV batches, with `hsg merge-csv <run_dir> --approve`. Report `merge-report.json`, row counts and caveats; FHIR and C-CDA are not merged.
+8. Do not claim an exact total of exported patients, cross-batch uniqueness, FHIR/C-CDA standards conformance or cloud upload unless separately verified.
+9. Never push generated data or secrets to Git, or publish feedback without explicit approval.
