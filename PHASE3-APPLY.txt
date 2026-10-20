@@ -1,0 +1,3 @@
+Apply only after Phase 2.2 is on main. Branch: feature/phase3-format-generators.
+Overwrite src/healthcare_generator/cli.py and README.md; add generate.py, tests/test_generate_phase3.py, skills/generate-data/SKILL.md, docs/PHASE-3.md.
+Do not replace .git, external, output or user-configured settings.
