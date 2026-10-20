@@ -1,4 +1,4 @@
-"""Cross-platform CLI; upstream Synthea remains an external dependency."""
+"""Cross-platform CLI; pinned official Synthea is an external dependency."""
 import platform
 import shutil
 from pathlib import Path
@@ -10,7 +10,6 @@ app = typer.Typer(help='Healthcare Synthetic Data Generator orchestration CLI')
 
 @app.command()
 def doctor() -> None:
-    """Check local prerequisites without changing the machine."""
     typer.echo(f'OS: {platform.system()} ({platform.machine()})')
     typer.echo(f'Python: {platform.python_version()}')
     for executable in ('java','git'):
@@ -65,8 +64,8 @@ def generate(format: str = typer.Argument(...,help='csv, fhir, or ccda'),
     seed: int | None = typer.Option(None,'--seed'),
     config: Path = typer.Option(Path('config/generator.yaml'),'--config'),
     output_root: Path | None = typer.Option(None,'--output-root'),
-    approve: bool = typer.Option(False,'--approve',help='Approve executing Synthea')) -> None:
-    """Preview or run one pinned Synthea export into a unique local directory."""
+    approve: bool = typer.Option(False,'--approve')) -> None:
+    """Phase 3.1 single-run generator; use generate-batch for large workloads."""
     from .generate import prepare,run
     try:
         if not approve:
@@ -75,13 +74,80 @@ def generate(format: str = typer.Argument(...,help='csv, fhir, or ccda'),
             typer.echo(f"Synthea: {spec['install_dir']} ({spec['revision']})")
             typer.echo(f"Output: {spec['output_dir']}")
             if patients>=100000:
-                typer.echo('WARNING: large single run, no batching or checkpoint/restart support yet.')
+                typer.echo('WARNING: large single run; prefer generate-batch.')
             typer.echo('No changes made. Re-run with --approve to execute.')
             return
         report=run(config,format,patients,state,seed,output_root,approved=True)
         typer.echo(f"PASS: {report['format']} output at {report['output_dir']}")
         typer.echo(f"Manifest: {Path(report['output_dir'])/'manifest.json'}")
     except SetupError as exc:
+        typer.echo(f'ERROR: {exc}',err=True)
+        raise typer.Exit(code=1) from exc
+
+@app.command('generate-batch')
+def generate_batch(
+    format: str = typer.Argument(...,help='csv, fhir, or ccda'),
+    patients: int = typer.Option(1000,'--patients','-p',min=1,max=1000000),
+    state: str | None = typer.Option(None,'--state'),
+    all_states: bool = typer.Option(False,'--all-states'),
+    allocation: str = typer.Option('total','--allocation',help='total or per-state'),
+    batch_size: int = typer.Option(1000,'--batch-size',min=1,max=10000),
+    seed: int | None = typer.Option(None,'--seed'),
+    config: Path = typer.Option(Path('config/generator.yaml'),'--config'),
+    output_root: Path | None = typer.Option(None,'--output-root'),
+    merge_csv: bool = typer.Option(False,'--merge-csv'),
+    approve: bool = typer.Option(False,'--approve')) -> None:
+    """Run checkpointed batches, optionally distributed across all 50 states."""
+    from .batch import plan, new_run, execute, merge_csv as do_merge
+    try:
+        tasks=plan(format,patients,state,all_states,allocation,batch_size,seed)
+        total=sum(t['patients'] for t in tasks)
+        typer.echo(f'Plan: {len(tasks)} batches | {total} requested living patients | {format}')
+        typer.echo(f'States: {50 if all_states else 1}; allocation: {allocation}; batch size: {batch_size}')
+        if not approve:
+            typer.echo('Preview only: no generation, directories, or uploads. Use --approve to execute.')
+            return
+        if merge_csv and format!='csv':
+            raise SetupError('--merge-csv only applies to CSV')
+        run_dir,_=new_run(config,format,patients,state,all_states,allocation,batch_size,seed,output_root)
+        typer.echo(f'Run directory: {run_dir}')
+        result=execute(config,run_dir,approved=True)
+        if merge_csv: do_merge(run_dir)
+        typer.echo(f"PASS: {result['status']} | manifest: {run_dir/'manifest.json'}")
+    except (SetupError, OSError) as exc:
+        typer.echo(f'ERROR: {exc}',err=True)
+        raise typer.Exit(code=1) from exc
+
+@app.command('resume-batch')
+def resume_batch(
+    run_dir: Path = typer.Argument(...,help='Existing batch run directory'),
+    config: Path = typer.Option(Path('config/generator.yaml'),'--config'),
+    merge_csv: bool = typer.Option(False,'--merge-csv'),
+    approve: bool = typer.Option(False,'--approve')) -> None:
+    """Resume failed or interrupted batches; keep already-completed outputs."""
+    from .batch import execute, merge_csv as do_merge
+    try:
+        if not approve:
+            typer.echo(f'Preview: resume incomplete batches under {run_dir}; --approve required.')
+            return
+        report=execute(config,run_dir,approved=True,resume=True)
+        if merge_csv: do_merge(run_dir)
+        typer.echo(f"PASS: {report['status']} | manifest: {run_dir/'manifest.json'}")
+    except (SetupError, OSError) as exc:
+        typer.echo(f'ERROR: {exc}',err=True)
+        raise typer.Exit(code=1) from exc
+
+@app.command('merge-csv')
+def merge_csv_command(run_dir: Path = typer.Argument(...), approve: bool = typer.Option(False,'--approve')) -> None:
+    """Consolidate batch CSV files, preserving source files and headers."""
+    from .batch import merge_csv
+    try:
+        if not approve:
+            typer.echo(f'Preview: merge completed CSV batches from {run_dir}; --approve required.')
+            return
+        report=merge_csv(run_dir)
+        typer.echo(f"PASS: {report['files']} CSV files merged; report: {run_dir/'merge-report.json'}")
+    except (SetupError, OSError) as exc:
         typer.echo(f'ERROR: {exc}',err=True)
         raise typer.Exit(code=1) from exc
 
