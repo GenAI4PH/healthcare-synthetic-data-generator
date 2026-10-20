@@ -1,13 +1,14 @@
 storage:
   provider: local  # local | s3 | azure_blob | gdrive
   local:
-    path: ./output
+    path: ./storage-exports
   s3:
     bucket: null
     prefix: synthea/
   azure_blob:
+    account_url: null  # e.g. https://ACCOUNT.blob.core.windows.net
     container: null
     prefix: synthea/
   gdrive:
     folder_id: null
-# Authentication uses platform credential chains / OAuth; never paste secrets here.
+# Authentication comes from standard SDK credential chains. Never store secrets here.
