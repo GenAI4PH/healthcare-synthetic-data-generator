@@ -22,3 +22,10 @@ hsg setup-synthea --approve
 hsg verify-synthea
 hsg verify-synthea --approve
 ```
+
+## Windows reliability / recovery
+
+- Before cloning, inspect the installation path. On Windows, recommend `C:/synthea` when the path is long. `git -c core.longpaths=true` is applied to clone and checkout; this does not remove all operating-system limits.
+- If setup reports an incomplete checkout, never automatically delete or reset it. Get user approval after confirming there are no custom changes. Then remove only the incomplete Synthea directory and retry.
+- For upstream v4.0.0 using Gradle 9.2.1, use **JDK 17 (recommended)**. The CLI rejects Java 26 and newer and pre-17 versions before executing setup/build.
+- If Java versions differ between the terminal and Gradle, check `JAVA_HOME`, `java -version`, `javac -version`, and the Gradle wrapper's `--version` output. Do not modify system-wide Java settings without consent.

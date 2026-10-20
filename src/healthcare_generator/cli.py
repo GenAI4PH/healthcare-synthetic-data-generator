@@ -4,7 +4,7 @@ import shutil
 from pathlib import Path
 import typer
 import yaml
-from .setup import SetupError, install, load_settings, check_prerequisites
+from .setup import SetupError, install, load_settings, check_prerequisites, windows_path_warning
 
 app = typer.Typer(help="Healthcare Synthetic Data Generator orchestration CLI")
 
@@ -37,6 +37,9 @@ def setup_synthea(
         target, revision = load_settings(config)
         typer.echo(f"Official source: https://github.com/synthetichealth/synthea.git")
         typer.echo(f"Revision: {revision}\nDestination: {target}")
+        warning = windows_path_warning(target)
+        if warning:
+            typer.echo(f"WARNING: {warning}")
         if not approve:
             typer.echo("Dry run only. Re-run with --approve after reviewing network and disk changes.")
             return
