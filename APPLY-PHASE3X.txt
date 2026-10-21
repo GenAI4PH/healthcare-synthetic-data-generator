@@ -1,6 +1,6 @@
-Phase 3.2–3.4 combined patch: copy ONLY files from this ZIP into repository root.
+ combined patch: copy ONLY files from this ZIP into repository root.
 Do not replace .git, external/, output/, or local config files.
-Requires Phase 3.1 already merged into main.
+Requires  already merged into main.
 Then python -m pip install -e ".[dev]" ; python -m pytest -q
 Preview with hsg generate-batch csv --patients 100 --state NJ --batch-size 25
-Execute by adding --approve. See docs/PHASE-3X.md.
+Execute by adding --approve. See docs/batch-processing.md.

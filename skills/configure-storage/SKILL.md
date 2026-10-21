@@ -1,9 +1,9 @@
----
+-
 name: configure-storage
 description: Preview and optionally upload an existing completed synthetic dataset to local, S3, Azure Blob, or Google Drive after separate approval.
----
+-
 # Storage configuration and upload
-1. Read `AGENTS.md`, `docs/PHASE-4.md` and `config/storage.yaml`.
+1. Read `AGENTS.md`, `docs/.md` and `config/storage.yaml`.
 2. Select provider, validate destination and confirm run directory includes completed `manifest.json`.
 3. Do not put keys, secrets or auth tokens into YAML or git. Use credential chains and least-privilege roles.
 4. Run `hsg storage-plan <run-dir> [--provider ...]`; report exact file count, bytes and destination.

@@ -1,4 +1,4 @@
-# Phase 2.1: official Synthea build and smoke test
+# : official Synthea build and smoke test
 
 Prerequisites: Python 3.11+, Git, JDK 17+ (`java` and `javac`), network access for Maven/Gradle dependencies.
 
