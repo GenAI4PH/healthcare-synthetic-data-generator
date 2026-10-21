@@ -3,7 +3,7 @@ storage:
   local:
     path: ./storage-exports
   s3:
-    bucket: null
+    bucket: healthcare-synthetic-data
     prefix: synthea/
   azure_blob:
     account_url: null  # e.g. https://ACCOUNT.blob.core.windows.net

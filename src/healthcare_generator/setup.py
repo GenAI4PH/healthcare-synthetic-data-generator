@@ -67,7 +67,7 @@ def java_runtime_major(output: str) -> int:
 
 def java_environment() -> dict[str, str]:
     """Validate both the shell JVM and the JVM Gradle will choose via JAVA_HOME."""
-    jhome = os.environ.get("JAVA_HOME")
+    jhome = os.environ.get("HSG_JAVA_HOME") or os.environ.get("JAVA_HOME")
     if jhome:
         candidate = Path(jhome) / 'bin' / ('java.exe' if platform.system() == 'Windows' else 'java')
         if not candidate.is_file():
@@ -85,7 +85,7 @@ def java_environment() -> dict[str, str]:
     # The upstream v4.0.0 Gradle 9.2.1 wrapper cannot run on Java 26.
     if not 17 <= major <= 25:
         raise SetupError(f'Java {major} is incompatible with the pinned Gradle 9.2.1 runtime; '
-                         'use JDK 17 (recommended) through JAVA_HOME.')
+                         'use JDK 17 (recommended) through HSG_JAVA_HOME or JAVA_HOME.')
     javac = Path(java_bin).with_name('javac.exe' if platform.system() == 'Windows' else 'javac')
     if not javac.is_file() and not shutil.which('javac'):
         raise SetupError('JDK required: javac not found. Install JDK 17 rather than a JRE.')
@@ -132,3 +132,13 @@ def install(config_path: Path, *, approved: bool = False) -> dict[str, str]:
     manifest = {"repository": OFFICIAL_REPO, "requested_revision": revision, "commit": commit, "directory": str(target)}
     (target.parent / "synthea-install.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return manifest
+
+
+def synthea_process_env() -> dict[str, str]:
+    """Select a dedicated JDK for subprocesses without changing machine settings."""
+    env = os.environ.copy()
+    home = env.get('HSG_JAVA_HOME')
+    if home:
+        env['JAVA_HOME'] = home
+        env['PATH'] = str(Path(home) / 'bin') + os.pathsep + env.get('PATH', '')
+    return env
