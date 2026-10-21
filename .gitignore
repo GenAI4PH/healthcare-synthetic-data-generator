@@ -12,3 +12,5 @@ output/
 workspaces/
 external/
 *.log
+
+storage-exports/

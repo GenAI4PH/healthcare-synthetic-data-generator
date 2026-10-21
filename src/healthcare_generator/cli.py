@@ -151,5 +151,8 @@ def merge_csv_command(run_dir: Path = typer.Argument(...), approve: bool = typer
         typer.echo(f'ERROR: {exc}',err=True)
         raise typer.Exit(code=1) from exc
 
+from .storage_cli import register as register_storage_commands
+register_storage_commands(app)
+
 if __name__=='__main__':
     app()

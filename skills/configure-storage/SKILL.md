@@ -1,14 +1,12 @@
 ---
 name: configure-storage
-description: Configure local or cloud destinations without embedding secrets.
+description: Preview and optionally upload an existing completed synthetic dataset to local, S3, Azure Blob, or Google Drive after separate approval.
 ---
-
-# configure-storage
-
-Status: **planned**. This document establishes the skill contract; do not claim the capability is operational in Phase 1.
-
-1. Determine OS and user intent; inspect existing configuration and actual CLI command availability.
-2. Present operations requiring permissions (download/install/network/upload/public GitHub posts) and obtain explicit approval.
-3. Use the supported `hsg` CLI implementation when available; do not invent commands.
-4. Validate actual outcomes, log the upstream version used, and report any blockers clearly.
-5. Never commit synthetic records, secret credentials, or the upstream Synthea installation.
+# Storage configuration and upload
+1. Read `AGENTS.md`, `docs/PHASE-4.md` and `config/storage.yaml`.
+2. Select provider, validate destination and confirm run directory includes completed `manifest.json`.
+3. Do not put keys, secrets or auth tokens into YAML or git. Use credential chains and least-privilege roles.
+4. Run `hsg storage-plan <run-dir> [--provider ...]`; report exact file count, bytes and destination.
+5. Obtain explicit user approval for remote uploads. Preview `hsg upload <run-dir> [--provider ...]` before `--approve`.
+6. Run the approved command, verify the receipt and report any partial remote upload failures. Do not delete remotely or retry blindly.
+7. Never post user feedback to GitHub automatically.
