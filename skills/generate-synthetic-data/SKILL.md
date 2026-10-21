@@ -1,11 +1,11 @@
----
+-
 name: generate-synthetic-data
 description: Execute configured Synthea simulation runs and validate output.
----
+-
 
 # generate-synthetic-data
 
-Status: **planned**. This document establishes the skill contract; do not claim the capability is operational in Phase 1.
+Status: **planned**. This document establishes the skill contract; do not claim the capability is operational in .
 
 1. Determine OS and user intent; inspect existing configuration and actual CLI command availability.
 2. Present operations requiring permissions (download/install/network/upload/public GitHub posts) and obtain explicit approval.

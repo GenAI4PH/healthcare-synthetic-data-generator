@@ -164,7 +164,7 @@ def execute(config: Path, run_dir: Path, approved: bool = False, resume: bool = 
               f'--exporter.baseDirectory={folder}',b['state']]
         command=gradle+['run',f'-Params={_params(args)}','--no-daemon']
         try:
-            result=subprocess.run(command,cwd=target,check=False)
+            result=subprocess.run(command,cwd=target,check=False,env=synthea_process_env())
             if result.returncode:
                 raise SetupError(f'Synthea batch {b["id"]} exited with {result.returncode}')
             b['actual_output']=validate_output(folder,fmt)

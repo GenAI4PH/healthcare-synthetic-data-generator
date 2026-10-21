@@ -15,9 +15,9 @@ code=proj.read_text(encoding='utf-8')
 if 'aws = ["boto3' not in code:
     marker='[project.optional-dependencies]'
     if marker not in code:raise SystemExit('Missing project.optional-dependencies in pyproject.toml')
-    code=code.replace(marker, marker+'\n'+Path('pyproject.phase4.toml.txt').read_text(encoding='utf-8').split('\n',1)[1],1)
+    code=code.replace(marker, marker+'\n'+Path('pyproject..toml.txt').read_text(encoding='utf-8').split('\n',1)[1],1)
     proj.write_text(code,encoding='utf-8')
 ignore=Path('.gitignore'); content=ignore.read_text(encoding='utf-8')
 if 'storage-exports/' not in content:
     ignore.write_text(content+'\nstorage-exports/\n',encoding='utf-8')
-print('Phase 4 integration complete')
+print(' integration complete')

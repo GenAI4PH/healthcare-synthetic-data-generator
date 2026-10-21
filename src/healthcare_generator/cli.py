@@ -65,7 +65,7 @@ def generate(format: str = typer.Argument(...,help='csv, fhir, or ccda'),
     config: Path = typer.Option(Path('config/generator.yaml'),'--config'),
     output_root: Path | None = typer.Option(None,'--output-root'),
     approve: bool = typer.Option(False,'--approve')) -> None:
-    """Phase 3.1 single-run generator; use generate-batch for large workloads."""
+    """ single-run generator; use generate-batch for large workloads."""
     from .generate import prepare,run
     try:
         if not approve:

@@ -1,4 +1,4 @@
-"""Attach Phase 4 storage CLI to existing Typer app."""
+"""Attach  storage CLI to existing Typer app."""
 from pathlib import Path
 import typer
 from .setup import SetupError
