@@ -1,12 +1,7 @@
--
+---
 name: configure-storage
-description: Preview and optionally upload an existing completed synthetic dataset to local, S3, Azure Blob, or Google Drive after separate approval.
--
+description: Plan and approve local or S3 uploads of completed synthetic-data runs.
+---
 # Storage configuration and upload
-1. Read `AGENTS.md`, `docs/.md` and `config/storage.yaml`.
-2. Select provider, validate destination and confirm run directory includes completed `manifest.json`.
-3. Do not put keys, secrets or auth tokens into YAML or git. Use credential chains and least-privilege roles.
-4. Run `hsg storage-plan <run-dir> [--provider ...]`; report exact file count, bytes and destination.
-5. Obtain explicit user approval for remote uploads. Preview `hsg upload <run-dir> [--provider ...]` before `--approve`.
-6. Run the approved command, verify the receipt and report any partial remote upload failures. Do not delete remotely or retry blindly.
-7. Never post user feedback to GitHub automatically.
+
+Read `AGENTS.md`, `docs/configuration.md` and `config/storage.yaml`. Confirm that the source has a completed `manifest.json`, then preview via `hsg storage-plan RUN_DIR --provider s3` (or `local`). Explain destination and size, request explicit approval, then run `hsg upload RUN_DIR --provider s3 --approve`. Review the receipt and disclose any partial-upload errors. Use IAM/SSO credentials, never committed secrets. Azure and Google Drive adapters are experimental and unverified.
