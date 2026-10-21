@@ -1,36 +1,28 @@
 # Healthcare Synthetic Data Generator
 
-A cross-platform, agent-friendly **orchestration framework** for the official [Synthea](https://github.com/synthetichealth/synthea) simulator. The external upstream engine is downloaded from its original repository and is **not vendored, modified, or distributed here**. Licensed Apache 2.0; see `LICENSE` and `THIRD_PARTY_NOTICES.md`.
+AI-agent-friendly Python orchestration for the official [Synthea](https://github.com/synthetichealth/synthea) engine. Synthea is downloaded separately, pinned, and never included in this repository. Apache-2.0 licensed.
 
-## Current status
-- Phase 1: foundation, license, configuration, diagnostics.
-- Phase 2 / 2.1 / 2.2: pinned Synthea checkout, Windows long-path handling, Java checks, smoke test.
-- Phase 3: single-run CSV, FHIR R4 Bundle JSON, C-CDA XML generation; unique output folders and per-run manifests.
-- Planned: batch/resume for 100K–1M, exact-total patient targeting, multi-state orchestration, S3/Azure Blob/Drive uploads.
+## Current capabilities
 
-## Install CLI (Windows PowerShell)
+- Official pinned Synthea checkout with local build validation.
+- CSV, FHIR R4, C-CDA local generation.
+- State names or two-letter abbreviations, batch and all-50-state generation, CSV consolidation and resume.
+- Local and Amazon S3 uploads with explicit approval. Azure/Google Drive connectors remain experimental/untested and are outside the current phase.
+- Phase 5: cross-platform Python CI, `HSG_JAVA_HOME` override for a project-scoped JDK, and failure manifests for single runs.
+
+## Windows quick start
+
 ```powershell
-py -3 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -e ".[dev]"
+python -m pip install -e ".[dev,aws]"
 python -m pytest -q
+$env:HSG_JAVA_HOME = 'C:\Program Files\Java\jdk-17'  # adjust if needed
 hsg doctor
-hsg setup-synthea
-hsg setup-synthea --approve
-hsg verify-synthea
+hsg generate csv --patients 10 --state NJ
+hsg generate csv --patients 10 --state NJ --approve
 ```
 
-For macOS/Linux use `python3 -m venv .venv` and `source .venv/bin/activate`.
-If you already have Synthea installed and validated, do not reinstall it. Configure `JAVA_HOME` with a supported JDK (17 recommended).
+## Storage
 
-## Generate (Phase 3)
-```powershell
-hsg generate csv --patients 10 --state Massachusetts
-hsg generate csv --patients 10 --state Massachusetts --approve
-hsg generate fhir --patients 1000 --state "New Jersey" --approve
-hsg generate ccda --patients 10 --state Texas --seed 123 --approve
-```
+Set `config/storage.yaml` to use `s3` and the private bucket `healthcare-synthetic-data`. Use your AWS SSO profile via `AWS_PROFILE`; never commit credentials. Preview with `hsg storage-plan RUN_DIR --provider s3` and only upload after approval with `hsg upload RUN_DIR --provider s3 --approve`.
 
-All generation is preview-only unless `--approve` is supplied. Output goes to `output/runs/<format>/<unique-run-id>/` with a `manifest.json`. The requested population targets **living patients**; actual total can be larger. 100K and 1M are accepted but not yet batched or resumable; verify a small run first.
-
-See [Phase 3 guide](docs/PHASE-3.md) and [`skills/generate-data/SKILL.md`](skills/generate-data/SKILL.md). Never commit generated output, upstream checkout, or credentials. No cloud uploads are implemented.
+Run manifests record `running`, `completed`, or `failed`. Requested patient counts target *living patients*; actual total may be larger. For large counts prefer `hsg generate-batch` with checkpoints and test progressively. See [Phase 5 guidance](docs/PHASE-5.md).

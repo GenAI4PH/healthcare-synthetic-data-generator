@@ -6,7 +6,7 @@ import platform
 from datetime import datetime, timezone
 from pathlib import Path
 import subprocess
-from .setup import SetupError, load_settings, run_command, check_prerequisites
+from .setup import synthea_process_env, SetupError, load_settings, run_command, check_prerequisites
 
 
 def _gradle(install_dir: Path) -> list[str]:
@@ -20,7 +20,7 @@ def _gradle(install_dir: Path) -> list[str]:
 
 def _checked(args: list[str], cwd: Path) -> None:
     # Inherit terminal output for long-running Gradle builds and useful diagnostics.
-    result = subprocess.run(args, cwd=cwd, check=False)
+    result = subprocess.run(args, cwd=cwd, check=False, env=synthea_process_env())
     if result.returncode:
         raise SetupError(f'Upstream process exited with status {result.returncode}')
 

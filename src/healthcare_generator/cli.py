@@ -70,7 +70,7 @@ def generate(format: str = typer.Argument(...,help='csv, fhir, or ccda'),
     try:
         if not approve:
             spec=prepare(config,format,patients,state,seed,output_root)
-            typer.echo(f"Preview: {format} | living population={patients} | state={state} | seed={seed}")
+            typer.echo(f"Preview: {format} | living population={patients} | state={spec['state']} | seed={seed}")
             typer.echo(f"Synthea: {spec['install_dir']} ({spec['revision']})")
             typer.echo(f"Output: {spec['output_dir']}")
             if patients>=100000:

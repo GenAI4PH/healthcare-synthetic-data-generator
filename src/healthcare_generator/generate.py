@@ -8,8 +8,9 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .setup import SetupError, load_settings, check_prerequisites, run_command, OFFICIAL_REPO
+from .setup import synthea_process_env, SetupError, load_settings, check_prerequisites, run_command, OFFICIAL_REPO
 from .verify import _gradle
+from .states import normalized_state
 
 FORMATS = ('csv', 'fhir', 'ccda')
 PRESETS = (10, 1000, 100000, 1000000)
@@ -22,8 +23,7 @@ def prepare(config: Path, fmt: str, patients: int, state: str, seed: int | None,
         raise SetupError(f'Unsupported format: {fmt}')
     if patients < 1 or patients > 1000000:
         raise SetupError('Patients must be between 1 and 1,000,000')
-    if not state or not re.fullmatch(r'[A-Za-z][A-Za-z .-]{1,79}', state):
-        raise SetupError('State must be a valid state name (for example, Massachusetts or New Jersey)')
+    state = normalized_state(state)
     if seed is not None and (seed < 0 or seed > 2**63-1):
         raise SetupError('Seed must be a nonnegative signed 64-bit integer')
     install_dir, revision = load_settings(config)
@@ -87,22 +87,38 @@ def run(config: Path, fmt: str, patients: int, state: str, seed: int | None = No
         raise SetupError('Installed Synthea does not match configured revision')
     out_dir = spec['output_dir']
     out_dir.mkdir(parents=True, exist_ok=False)
-    flags = [f'--{v}={str(k==fmt).lower()}' for k,v in FLAGS.items()]
-    args = ['-p', str(patients), *flags, '--exporter.fhir_stu3.export=false',
-            '--exporter.fhir_dstu2.export=false', '--exporter.fhir.bulk_data=false',
-            '--exporter.csv.append_mode=false', f'--exporter.baseDirectory={out_dir}']
-    if seed is not None:
-        args.extend(['-s', str(seed)])
-    args.append(state)
-    params = '[' + ','.join("'" + s.replace('\\', '\\\\').replace("'", "\\'") + "'" for s in args) + ']'
-    command = _gradle(target) + ['run', f'-Params={params}', '--no-daemon']
-    result = subprocess.run(command, cwd=target, check=False)
-    if result.returncode:
-        raise SetupError(f'Synthea run failed (exit {result.returncode}); partial output retained: {out_dir}')
-    stats = validate_output(out_dir, fmt)
-    manifest = {'created_at_utc': datetime.now(timezone.utc).isoformat(), 'run_id':spec['run_id'],
-                'status':'completed', 'synthea_commit':head, 'synthea_revision':spec['revision'],
-                'format':fmt, 'requested_living_population':patients, 'state':state, 'seed':seed,
-                'output_dir':str(out_dir), 'actual_output':stats}
-    (out_dir/'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n', encoding='utf-8')
+    manifest_path = out_dir / 'manifest.json'
+    manifest = {'created_at_utc': datetime.now(timezone.utc).isoformat(),
+                'run_id':spec['run_id'], 'status':'running',
+                'synthea_commit':head, 'synthea_revision':spec['revision'],
+                'format':fmt, 'requested_living_population':patients,
+                'state':spec['state'], 'seed':seed, 'output_dir':str(out_dir)}
+    def write_manifest():
+        temporary = manifest_path.with_suffix('.tmp')
+        temporary.write_text(json.dumps(manifest, indent=2)+'\n', encoding='utf-8')
+        temporary.replace(manifest_path)
+    write_manifest()
+    try:
+        flags = [f'--{v}={str(k==fmt).lower()}' for k,v in FLAGS.items()]
+        args = ['-p', str(patients), *flags, '--exporter.fhir_stu3.export=false',
+                '--exporter.fhir_dstu2.export=false', '--exporter.fhir.bulk_data=false',
+                '--exporter.csv.append_mode=false', f'--exporter.baseDirectory={out_dir}']
+        if seed is not None:
+            args.extend(['-s', str(seed)])
+        args.append(spec['state'])
+        params = '[' + ','.join("'" + x.replace('\\', '\\\\').replace("'", "\\'") + "'" for x in args) + ']'
+        command = _gradle(target) + ['run', f'-Params={params}', '--no-daemon']
+        result = subprocess.run(command, cwd=target, check=False, env=synthea_process_env())
+        if result.returncode:
+            raise SetupError(f'Synthea run failed (exit {result.returncode}); partial output retained: {out_dir}')
+        manifest['actual_output'] = validate_output(out_dir, fmt)
+        manifest['status'] = 'completed'
+        manifest['completed_at_utc'] = datetime.now(timezone.utc).isoformat()
+        write_manifest()
+    except Exception as exc:
+        manifest['status'] = 'failed'
+        manifest['error'] = str(exc)
+        manifest['failed_at_utc'] = datetime.now(timezone.utc).isoformat()
+        write_manifest()
+        raise
     return manifest

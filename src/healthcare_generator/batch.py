@@ -13,33 +13,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .generate import FLAGS, FORMATS, validate_output
-from .setup import SetupError, OFFICIAL_REPO, check_prerequisites, load_settings, run_command
+from .setup import synthea_process_env, SetupError, OFFICIAL_REPO, check_prerequisites, load_settings, run_command
 from .verify import _gradle
 
-US_STATES = {
- 'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California','CO':'Colorado',
- 'CT':'Connecticut','DE':'Delaware','FL':'Florida','GA':'Georgia','HI':'Hawaii','ID':'Idaho',
- 'IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiana',
- 'ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi',
- 'MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey',
- 'NM':'New Mexico','NY':'New York','NC':'North Carolina','ND':'North Dakota','OH':'Ohio',
- 'OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvania','RI':'Rhode Island','SC':'South Carolina',
- 'SD':'South Dakota','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginia',
- 'WA':'Washington','WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming'}
+from .states import US_STATES, normalized_state
 
 
 def utcnow() -> str:
     return datetime.now(timezone.utc).isoformat()
-
-
-def normalized_state(value: str) -> str:
-    s = value.strip()
-    if s.upper() in US_STATES:
-        return US_STATES[s.upper()]
-    for n in US_STATES.values():
-        if s.casefold() == n.casefold():
-            return n
-    raise SetupError(f'Invalid US state: {value!r}')
 
 
 def allocation(states: list[str], patients: int, mode: str) -> dict[str, int]:
