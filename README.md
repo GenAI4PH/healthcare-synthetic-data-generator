@@ -67,7 +67,7 @@ On Linux/macOS use `python3 -m venv .venv`, `source .venv/bin/activate`, and set
 
 - [Setup](docs/setup.md) — prerequisites, installation and verification
 - [Configuration](docs/configuration.md) — states, formats, seeds, output paths and S3
-- [Usage](docs/usage.md) — single runs, batching, resume, merging and upload
+- [Usage Guide](docs/usage-guide.md) — single runs, batching, resume, merging and upload
 - [Troubleshooting](docs/troubleshooting.md) — Java, paths, failed runs, permissions and CI
 
 For agent instructions see [AGENTS.md](AGENTS.md) and [`skills/`](skills/). For contributions and project information see [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [CHANGELOG.md](CHANGELOG.md).
