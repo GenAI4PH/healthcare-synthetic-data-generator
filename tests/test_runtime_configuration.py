@@ -62,7 +62,14 @@ def test_batch_uses_dedicated_jdk_for_every_subprocess(tmp_path, monkeypatch, re
     (run_dir / 'manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
     monkeypatch.setattr(batch, '_source', lambda config: (tmp_path, 'v4.0.0', 'pinned-commit'))
     monkeypatch.setattr(batch, '_gradle', lambda target: ['gradle'])
-    monkeypatch.setattr(batch, 'validate_output', lambda folder, fmt: {'patient_rows': 1, 'files': 1})
+    monkeypatch.setattr(
+    batch,
+    'validate_output',
+    lambda folder, fmt, expected_living=None: {
+        'patient_rows': 1,
+        'files': 1
+    }
+    )
 
     with patch.object(batch.subprocess, 'run') as launch:
         launch.return_value.returncode = 0

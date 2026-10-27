@@ -146,7 +146,7 @@ def execute(config: Path, run_dir: Path, approved: bool = False, resume: bool = 
     for b in manifest['batches']:
         if b['status']=='completed':
             # Revalidate completed batch before trusting it during resume.
-            validate_output(run_dir/'batches'/b['id'],fmt)
+            validate_output(run_dir/'batches'/b['id'],fmt,expected_living=b['patients'])
             continue
         folder=run_dir/'batches'/b['id']
         if folder.exists():
@@ -167,7 +167,7 @@ def execute(config: Path, run_dir: Path, approved: bool = False, resume: bool = 
             result=subprocess.run(command,cwd=target,check=False,env=synthea_process_env())
             if result.returncode:
                 raise SetupError(f'Synthea batch {b["id"]} exited with {result.returncode}')
-            b['actual_output']=validate_output(folder,fmt)
+            b['actual_output']=validate_output(folder,fmt,expected_living=b['patients'])
             b['status']='completed'; b['completed_at_utc']=utcnow()
         except Exception as exc:
             b['status']='failed';b['error']=str(exc);manifest['status']='failed'

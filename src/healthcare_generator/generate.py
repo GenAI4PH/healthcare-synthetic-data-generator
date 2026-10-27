@@ -40,34 +40,7 @@ def prepare(config: Path, fmt: str, patients: int, state: str, seed: int | None,
             'run_id': run_id}
 
 
-def validate_output(out_dir: Path, fmt: str) -> dict:
-    folder = out_dir / fmt
-    if fmt == 'csv':
-        file = folder / 'patients.csv'
-        if not file.is_file():
-            raise SetupError(f'CSV output missing: {file}')
-        with file.open('r', encoding='utf-8-sig', newline='') as handle:
-            reader = csv.DictReader(handle)
-            if not reader.fieldnames or 'Id' not in reader.fieldnames:
-                raise SetupError('CSV patients.csv missing Id header')
-            rows = sum(1 for r in reader if r.get('Id'))
-        if rows == 0:
-            raise SetupError('No patient rows in CSV output')
-        return {'patient_rows': rows, 'files': len(list(folder.glob('*.csv')))}
-    suffix = '*.json' if fmt == 'fhir' else '*.xml'
-    files = sorted(folder.glob(suffix)) if folder.exists() else []
-    if not files:
-        raise SetupError(f'No {fmt} files found under {folder}')
-    if fmt == 'fhir':
-        # Parsing one file confirms that the exported data is JSON; supplemental metadata may also exist.
-        with files[0].open(encoding='utf-8-sig') as handle:
-            document = json.load(handle)
-        if not isinstance(document, dict) or 'resourceType' not in document:
-            raise SetupError('FHIR output does not have resourceType')
-    else:
-        import xml.etree.ElementTree as ET
-        ET.parse(files[0])
-    return {'files': len(files)}
+from .validation import validate_output
 
 
 def run(config: Path, fmt: str, patients: int, state: str, seed: int | None = None,
@@ -111,7 +84,7 @@ def run(config: Path, fmt: str, patients: int, state: str, seed: int | None = No
         result = subprocess.run(command, cwd=target, check=False, env=synthea_process_env())
         if result.returncode:
             raise SetupError(f'Synthea run failed (exit {result.returncode}); partial output retained: {out_dir}')
-        manifest['actual_output'] = validate_output(out_dir, fmt)
+        manifest['actual_output'] = validate_output(out_dir, fmt, expected_living=patients)
         manifest['status'] = 'completed'
         manifest['completed_at_utc'] = datetime.now(timezone.utc).isoformat()
         write_manifest()
