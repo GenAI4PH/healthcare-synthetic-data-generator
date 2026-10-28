@@ -17,6 +17,7 @@ from .setup import synthea_process_env, SetupError, OFFICIAL_REPO, check_prerequ
 from .verify import _gradle
 
 from .states import US_STATES, normalized_state
+from .run_integrity import run_lock, inventory, check_csv_relationships
 
 
 def utcnow() -> str:
@@ -131,6 +132,13 @@ def _params(args: list[str]) -> str:
 def execute(config: Path, run_dir: Path, approved: bool = False, resume: bool = False) -> dict:
     if not approved:
         raise SetupError('Explicit --approve required to execute Synthea')
+    with run_lock(Path(run_dir).resolve()):
+        return _execute_locked(config, run_dir, approved=approved, resume=resume)
+
+
+def _execute_locked(config: Path, run_dir: Path, approved: bool = False, resume: bool = False) -> dict:
+    if not approved:
+        raise SetupError('Explicit --approve required to execute Synthea')
     run_dir=run_dir.resolve()
     manifest=_read_manifest(run_dir)
     target, ver, commit=_source(config)
@@ -168,6 +176,7 @@ def execute(config: Path, run_dir: Path, approved: bool = False, resume: bool = 
             if result.returncode:
                 raise SetupError(f'Synthea batch {b["id"]} exited with {result.returncode}')
             b['actual_output']=validate_output(folder,fmt,expected_living=b['patients'])
+            b['validation'] = inventory(folder / fmt)
             b['status']='completed'; b['completed_at_utc']=utcnow()
         except Exception as exc:
             b['status']='failed';b['error']=str(exc);manifest['status']='failed'
@@ -175,6 +184,7 @@ def execute(config: Path, run_dir: Path, approved: bool = False, resume: bool = 
             raise
         _write_json(run_dir/'manifest.json',manifest)
     manifest['status']='completed';manifest['completed_at_utc']=utcnow()
+    manifest['validation'] = {'status': 'passed', 'completed_batches': len(manifest['batches'])}
     manifest['summary']={'completed_batches':len(manifest['batches']),
                          'requested_living_population':manifest['requested_living_population'],
                          'csv_exported_patient_rows':sum(b['actual_output'].get('patient_rows',0) for b in manifest['batches']) if fmt=='csv' else None,
