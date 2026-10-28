@@ -41,6 +41,7 @@ def prepare(config: Path, fmt: str, patients: int, state: str, seed: int | None,
 
 
 from .validation import validate_output
+from .run_integrity import run_lock, inventory
 
 
 def run(config: Path, fmt: str, patients: int, state: str, seed: int | None = None,
@@ -72,6 +73,18 @@ def run(config: Path, fmt: str, patients: int, state: str, seed: int | None = No
         temporary.replace(manifest_path)
     write_manifest()
     try:
+        with run_lock(out_dir):
+            return _run_locked(spec, fmt, patients, seed, target, out_dir, manifest, write_manifest)
+    except Exception as exc:
+        manifest['status'] = 'failed'
+        manifest['error'] = str(exc)
+        manifest['failed_at_utc'] = datetime.now(timezone.utc).isoformat()
+        write_manifest()
+        raise
+
+
+def _run_locked(spec, fmt, patients, seed, target, out_dir, manifest, write_manifest):
+    try:
         flags = [f'--{v}={str(k==fmt).lower()}' for k,v in FLAGS.items()]
         args = ['-p', str(patients), *flags, '--exporter.fhir_stu3.export=false',
                 '--exporter.fhir_dstu2.export=false', '--exporter.fhir.bulk_data=false',
@@ -85,6 +98,7 @@ def run(config: Path, fmt: str, patients: int, state: str, seed: int | None = No
         if result.returncode:
             raise SetupError(f'Synthea run failed (exit {result.returncode}); partial output retained: {out_dir}')
         manifest['actual_output'] = validate_output(out_dir, fmt, expected_living=patients)
+        manifest['validation'] = inventory(out_dir / fmt)
         manifest['status'] = 'completed'
         manifest['completed_at_utc'] = datetime.now(timezone.utc).isoformat()
         write_manifest()
