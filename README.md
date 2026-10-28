@@ -1,81 +1,81 @@
-# Healthcare Synthetic Data Generator
+# Healthcare Synthetic Data Generator — PHI-Free Synthetic Clinical Data for Development and Testing
 
 [![CI](https://github.com/GenAI4PH/healthcare-synthetic-data-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/GenAI4PH/healthcare-synthetic-data-generator/actions/workflows/ci.yml)
 
-**Tell your AI coding agent what synthetic healthcare data you need. It can set up Synthea, configure the generator, run batches across US states, and produce ready-to-use files in your workspace.**
+**Generate synthetic healthcare and clinical data with the official Synthea simulator** using an AI-agent-friendly, cross-platform Python CLI. Create **CSV, HL7 FHIR R4 JSON, and C-CDA XML** exports for software development, QA, ETL/ELT pipeline testing, analytics, interoperability prototyping, and demos—without supplying real patient records.
 
-This agent-friendly Python CLI orchestrates the [official Synthea simulator](https://github.com/synthetichealth/synthea) to generate **CSV, FHIR R4 Bundle JSON, and C-CDA XML**. It supports one state or all 50 US states, checkpointed batch runs, CSV consolidation, local storage, and Amazon S3 delivery.
+**Keywords:** synthetic healthcare data · synthetic clinical data · PHI-free test data · Synthea data generator · FHIR R4 sample data · C-CDA XML · healthcare CSV datasets · healthcare ETL testing · EHR interoperability testing · patient data simulation.
 
-## AI-agent quick start — describe the dataset, not the commands
+> **Privacy and intended use:** Synthea generates fictional patients rather than transforming real patient records; the resulting dataset is designed for **PHI-free development and testing**. Do **not** assume an arbitrary file is PHI-free merely because it is stored or processed by this tool: inspect any custom inputs, enrichment, joins, and uploads. Synthetic output is **not clinically validated**, is not a substitute for representative real-world distributions, and must not be used to make patient-care decisions.
 
-Open this repository in an AI coding agent such as ChatGPT Codex or a VS Code coding agent. Give it access to **your local clone or authorized sandbox**, allow it to read the repository's [`AGENTS.md`](AGENTS.md) and [`skills/`](skills/), and provide this prompt:
+This project orchestrates a **separately installed, pinned, unmodified official [Synthea](https://github.com/synthetichealth/synthea)** engine. It supports one state or all **50 US states**, checkpointed batch runs, resume, structural validation, CSV relationship checks, run inventory, local storage, and optional **Amazon S3** delivery. The orchestrator is Apache-2.0 licensed; see [third-party notices](THIRD_PARTY_NOTICES.md).
 
-> Configure this repository to use the official pinned Synthea engine. Check prerequisites and install any missing dependencies with my approval. Generate **CSV** data for **10,000 requested living patients**, distributed across **all 50 US states**, in batches of **500 patients**. Merge CSV outputs into one header-preserving file per dataset type. Show me a preview of the plan, required permissions, disk usage considerations, and expected output location **before** running any installation or generation. After I approve, execute the workflow, validate the run manifest and files, and give me the resulting paths. Do not commit generated datasets or credentials.
+## What can I build or test with it?
 
-Change the format (`csv`, `fhir`, or `ccda`), patient target, states, batch size, seed, and destination to match your needs. For example, ask for *1,000 FHIR R4 patients in New Jersey*, or *100 living patients per state with a batch size of 25*.
+| Format | Example use cases | Starting guide |
+| --- | --- | --- |
+| **CSV** | Healthcare data warehouses, landing/raw-to-silver-to-gold pipelines, SQL models, ETL unit/integration tests, analytics dashboards | [CSV development and testing](docs/data-usage-csv.md) |
+| **FHIR R4 JSON** | FHIR ingestion, Bundle parsing, resource mapping, API payload testing, EHR interoperability prototypes | [FHIR development and testing](docs/data-usage-fhir.md) |
+| **C-CDA XML** | Clinical document ingestion, XML namespace handling, CDA extraction, document-to-FHIR mapping prototypes | [C-CDA development and testing](docs/data-usage-ccda.md) |
 
-**What the agent can automate:**
+All three formats have [important limitations](docs/data-limitations.md). The project **does not** provide validated production datasets, clinical decision-support data, guaranteed payer claims/HEDIS measures, or comprehensive format conformance certification.
 
-1. Inspect the environment and repository instructions; check Python, Git, and a compatible JDK (JDK 17 recommended).
-2. Download and verify the **pinned, unmodified upstream Synthea** source in an ignored local directory.
-3. Preview generation settings for formats, patient targets, states, and batches.
-4. Run approved generation commands, resume interrupted batches, and merge CSVs when requested.
-5. Inspect the completed `manifest.json` and generated files, then optionally preview and upload to a private S3 bucket with separate approval.
+## Quick start: Windows, Linux or macOS
 
-**Required access and approvals:** The agent must have permission to run commands, read/write its designated workspace or sandbox, and reach the network for setup. Repository access alone does **not** give an agent access to your computer, cloud account, or shell. You must grant those permissions in your agent environment. This project's CLI deliberately uses explicit `--approve` flags for operations with side effects; the agent should show the plan and obtain your approval before executing them. AWS uploads also require independently configured credentials and authorization.
+Install **Python 3.11+**, **Git**, and **JDK 17**. Follow the step-by-step [cross-platform setup guide](docs/setup.md) for OS-specific installation and Java configuration.
 
-### Example agent-generated commands
-
-```powershell
-# Preview a 50-state CSV workload (1,000 requested living patients total)
-hsg generate-batch csv --patients 1000 --all-states --allocation total --batch-size 100
-
-# Execute after reviewing and approving the plan
-hsg generate-batch csv --patients 1000 --all-states --allocation total --batch-size 100 --merge-csv --approve
-
-# Generate a single-state FHIR R4 dataset
-hsg generate fhir --patients 100 --state NJ --approve
-
-# Generate 100 requested living patients per state (5,000 total)
-hsg generate-batch csv --patients 100 --all-states --allocation per-state --batch-size 25 --approve
-```
-
-`--patients` specifies Synthea's **target living population**, not an exact number of exported patient rows. The agent should report actual output counts from run manifests rather than promise exact counts.
-
-## Manual quick start (Windows PowerShell)
-
-Prerequisites: Python 3.11+, Git and JDK 17.
-
-```powershell
-git clone https://github.com/GenAI4PH/healthcare-synthetic-data-generator.git
-cd healthcare-synthetic-data-generator
-py -3 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -e '.[dev,aws]'
-$env:HSG_JAVA_HOME = 'C:\Program Files\Java\jdk-17'  # adjust to your JDK installation
+```bash
+# After cloning, creating/activating a virtual environment, and installing the package:
 hsg doctor
-hsg setup-synthea
-hsg setup-synthea --approve
-hsg verify-synthea --approve
-hsg generate csv --patients 10 --state NJ
+hsg setup-synthea                  # preview
+hsg setup-synthea --approve        # install the pinned official engine
+hsg verify-synthea --approve       # smoke test
+hsg generate csv --patients 10 --state NJ   # preview
 hsg generate csv --patients 10 --state NJ --approve
 ```
 
-On Linux/macOS use `python3 -m venv .venv`, `source .venv/bin/activate`, and set `HSG_JAVA_HOME` when needed. Approved runs are created under `output/runs/<format>/<run-id>/` with a `manifest.json`.
+Generated runs live under `output/runs/<format>/<run-id>/` with a `manifest.json`. `--patients` is the **requested living population**; total exported patient rows may be higher because Synthea can also export deceased patients.
+
+## AI-agent workflow
+
+Open the repository in an AI coding agent such as ChatGPT Codex or a VS Code coding agent. Give it access to your **authorized** workspace, and ask it to follow [AGENTS.md](AGENTS.md) and [`skills/`](skills/).
+
+> Set up the pinned Synthea simulator after showing me the prerequisites and seeking approval. Generate CSV data for 1,000 requested living patients across all 50 US states in batches of 100. Preview the plan and storage requirements. After my approval, run generation, validate the manifest and outputs, merge the CSVs, and report the generated file paths. Do not commit datasets or credentials.
+
+You can also request FHIR R4 or C-CDA output, different state selections, seeds, or a private S3 destination. The agent must obtain execution access and explicit approvals; GitHub access does not grant shell or cloud permissions.
+
+## CLI examples
+
+```bash
+# Preview all-state CSV generation; then execute with approval
+hsg generate-batch csv --patients 1000 --all-states --allocation total --batch-size 100
+hsg generate-batch csv --patients 1000 --all-states --allocation total --batch-size 100 --merge-csv --approve
+
+# FHIR R4 patient exports
+hsg generate fhir --patients 100 --state NJ --approve
+
+# C-CDA clinical documents
+hsg generate ccda --patients 100 --state NY --approve
+
+# 100 requested living patients *per state* = 5,000 requested total
+hsg generate-batch csv --patients 100 --all-states --allocation per-state --batch-size 25 --approve
+
+# Resume a failed or interrupted batch run
+hsg resume-batch 'output/runs/csv/<run-id>' --approve
+```
+
+The CLI previews plans without `--approve`; it does not implicitly modify your environment or push data to S3.
 
 ## Documentation
 
-- [Setup](docs/setup.md) — prerequisites, installation and verification
-- [Configuration](docs/configuration.md) — states, formats, seeds, output paths and S3
-- [Usage Guide](docs/usage-guide.md) — single runs, batching, resume, merging and upload
-- [Troubleshooting](docs/troubleshooting.md) — Java, paths, failed runs, permissions and CI
+- [Set up on Windows, Linux, and macOS](docs/setup.md)
+- [Use synthetic healthcare CSV in development and testing](docs/data-usage-csv.md)
+- [Use HL7 FHIR R4 JSON in development and testing](docs/data-usage-fhir.md)
+- [Use C-CDA XML in development and testing](docs/data-usage-ccda.md)
+- [Synthetic-data limitations, privacy, and validation](docs/data-limitations.md)
+- [Configuration](docs/configuration.md) · [Usage guide](docs/usage-guide.md) · [Troubleshooting](docs/troubleshooting.md)
+- [Agent instructions](AGENTS.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md)
 
-For agent instructions see [AGENTS.md](AGENTS.md) and [`skills/`](skills/). For contributions and project information see [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [CHANGELOG.md](CHANGELOG.md).
+## Security and scope
 
-## Safety and limitations
-
-Synthea is installed separately at a pinned revision; it is not bundled, modified, or redistributed here. This orchestration toolkit is Apache-2.0 licensed; see [third-party notices](THIRD_PARTY_NOTICES.md).
-
-CSV merge does not deduplicate identifiers or guarantee foreign-key integrity. Output validation checks basic structure, not comprehensive FHIR/C-CDA conformance or clinical-data integrity. Remote S3 checksum verification and reliable partial-upload recovery are not implemented; Azure Blob and Google Drive adapters are experimental and unverified. These datasets are for synthetic development and testing, **not clinical care**.
-
-Never commit generated files (`output/`), the upstream checkout (`external/`), or credentials. Review [SECURITY.md](SECURITY.md) for vulnerability reporting.
+Never commit `output/`, `external/`, `.env` files, access tokens, or cloud credentials. Review every output before sharing it externally; synthetic data can still contain unintended sensitive information if users blend it with real records. The repository's CSV checks cover selected patient and encounter relationships, **not every foreign key in every exporter file**. Structural FHIR and C-CDA checks do **not** certify HL7 conformance. See [limitations](docs/data-limitations.md) for details.
