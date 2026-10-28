@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [0.1.0] - 2026-10-28
+
 ### Added
 - Cross-platform CLI for pinned official Synthea, CSV/FHIR/C-CDA generation, checkpointed batches, state normalization, CSV consolidation and local/S3 transfers.
 - Python unit test matrix, run manifests, Java override for generator subprocesses, developer documentation and release workflow.
