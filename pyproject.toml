@@ -5,18 +5,29 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "healthcare-synthetic-data-generator"
 version = "0.1.0"
-description = "Cross-platform orchestration for the official Synthea generator"
+description = "Generate PHI-free synthetic healthcare and clinical test data with Synthea: CSV, HL7 FHIR R4 JSON and C-CDA XML"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 authors = [{name = "Healthcare Synthetic Data Generator Contributors"}]
+keywords = ["synthetic healthcare data", "synthetic clinical data", "PHI-free", "Synthea", "FHIR R4", "C-CDA", "CSV", "healthcare testing", "ETL"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Topic :: Scientific/Engineering :: Medical Science Apps.",
+  "Topic :: Software Development :: Testing :: Test Data",
+  "Topic :: Database",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+]
 dependencies = ["typer>=0.12,<1", "PyYAML>=6,<7"]
 
 [project.optional-dependencies]
 aws = ["boto3>=1.34,<2"]
 azure = ["azure-identity>=1.16,<2", "azure-storage-blob>=12.20,<13"]
 drive = ["google-auth>=2.28,<3", "google-api-python-client>=2.120,<3"]
-
 dev = ["pytest>=8,<10"]
 
 [project.scripts]
